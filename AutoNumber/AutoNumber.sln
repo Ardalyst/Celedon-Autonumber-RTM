@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoNumberUnitTest", "..\AutoNumberUnitTest\AutoNumberUnitTest.csproj", "{4738FBAC-87ED-4D9D-8B3F-73932279B88B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web Resources", "Web Resources", "{0A3D9640-33EA-40A0-A178-5AA765361AD8}"
+	ProjectSection(SolutionItems) = preProject
+		..\WebResources\cel_autonumber.js = ..\WebResources\cel_autonumber.js
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoNumber", "AutoNumber.csproj", "{3ECAF282-5B06-4668-8E23-1CDF8E390B7C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4738FBAC-87ED-4D9D-8B3F-73932279B88B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4738FBAC-87ED-4D9D-8B3F-73932279B88B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4738FBAC-87ED-4D9D-8B3F-73932279B88B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4738FBAC-87ED-4D9D-8B3F-73932279B88B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ECAF282-5B06-4668-8E23-1CDF8E390B7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ECAF282-5B06-4668-8E23-1CDF8E390B7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ECAF282-5B06-4668-8E23-1CDF8E390B7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ECAF282-5B06-4668-8E23-1CDF8E390B7C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
