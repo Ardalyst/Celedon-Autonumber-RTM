@@ -13,7 +13,6 @@
 * Allows runtime parameters to be entered into the Prefix and Suffix fields (See below for instructions)
 * Runtime parameters now support looking up to parent record values
 * Supports nested conditional parameters ie: "else if" conditions
-* Validation on runtime parameters should now be working
 
 ##Instructions for Runtime Parameters
 The Prefix and Suffix fields support runtime parameters.  You can enter the name of an attribute into those fields, and the value of that attribute will be inserted into the prefix or suffix when the autonumber is generated.
