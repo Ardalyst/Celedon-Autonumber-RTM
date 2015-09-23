@@ -4,11 +4,6 @@ This is a custom re-useable AutoNumber that we can use as needed.
 The Managed solution is the one that should be used in all client's systems.  That way we have full control to install/uninstall/upgrade it as needed.
 The UnManaged solution is only to be used for developing the Managed solution.
 
-##IMPORTANT Upgrade note for 0.9.4+
-It was found that there could be naming conflicts with other autonumber solutions.  So I've created a new solution package with a new unique name.  
-This means that to upgrade from 0.9.3 or older, you must uninstall your previous version.  But first write down or print-screen your settings, so you can re-implement them exactly the same.
-New deployments just install normally, you don't need to worry about it.
-
 ##What it does right now, v1.0:
 * Supports custom prefix and suffix
 * Configurable number of digits
