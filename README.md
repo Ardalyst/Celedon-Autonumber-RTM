@@ -1,9 +1,5 @@
 #Celedon Partners AutoNumber Solution
 
-This is a custom re-useable AutoNumber that we can use as needed.
-The Managed solution is the one that should be used in all client's systems.  That way we have full control to install/uninstall/upgrade it as needed.
-The UnManaged solution is only to be used for developing the Managed solution.
-
 ##What it does right now, v1.0:
 * Supports custom prefix and suffix
 * Configurable number of digits
@@ -17,14 +13,7 @@ The UnManaged solution is only to be used for developing the Managed solution.
 * Allows runtime parameters to be entered into the Prefix and Suffix fields (See below for instructions)
 * Runtime parameters now support looking up to parent record values
 * Supports nested conditional parameters ie: "else if" conditions
-* NEW: Validation on runtime parameters should now be working - TESTING IS NEEDED!!
-* NEW: Custom icon by Danny
-
-If you get a validation exception but you know the parameters are correct, you can temporarily disable that plugin step, do your safe, then re-enable it.  And let me know the steps to repro so I can fix it.
-If you don't get a validation exception, but the autonumber throws an exception when generating a new number, let me know the steps to repro so I can fix it.
-
-##What it might do in the future:
-* Support generating autonumbers BEFORE a record is created, allowing the number to be displayed on a create form
+* Validation on runtime parameters should now be working
 
 ##Instructions for Runtime Parameters
 The Prefix and Suffix fields support runtime parameters.  You can enter the name of an attribute into those fields, and the value of that attribute will be inserted into the prefix or suffix when the autonumber is generated.
