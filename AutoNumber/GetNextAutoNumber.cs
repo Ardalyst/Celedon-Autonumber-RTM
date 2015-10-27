@@ -67,6 +67,7 @@ namespace Celedon
 			foreach (Guid autoNumberId in autoNumberIdList)
 			{
 				Entity autoNumber = context.OrganizationService.Retrieve("cel_autonumber", autoNumberId, true);
+				string targetAttribute = autoNumber.GetAttributeValue<string>("cel_attributename");
 
 				if ((autoNumber.Contains("cel_conditionaloptionset") && (!Target.Contains(autoNumber.GetAttributeValue<string>("cel_conditionaloptionset")) || Target.GetAttributeValue<OptionSetValue>(autoNumber.GetAttributeValue<string>("cel_conditionaloptionset")).Value != autoNumber.GetAttributeValue<int>("cel_conditionalvalue"))))
 				{
@@ -76,21 +77,21 @@ namespace Celedon
 				//{
 				//	continue;  // Continue, if this is a conditional lookup
 				//}
-				else if (Target.Contains(autoNumber.GetAttributeValue<string>("cel_attributename")))
+				else if (Target.Contains(targetAttribute) && !String.IsNullOrWhiteSpace(Target.GetAttributeValue<string>(targetAttribute)))
 				{
 					continue;  // Continue, so we don't overwrite an existing value
 				}
 
 				// Generate number and insert into Target Record
-				Target[autoNumber.GetAttributeValue<string>("cel_attributename")] = String.Format("{0}{1}{2}", ReplaceParameters(autoNumber.GetAttributeValue<string>("cel_prefix"), Target, context.OrganizationService),
-																											   autoNumber.GetAttributeValue<int>("cel_nextnumber").ToString("D" + autoNumber.GetAttributeValue<int>("cel_digits")),
-																											   ReplaceParameters(autoNumber.GetAttributeValue<string>("cel_suffix"), Target, context.OrganizationService));
+				Target[targetAttribute] = String.Format("{0}{1}{2}", ReplaceParameters(autoNumber.GetAttributeValue<string>("cel_prefix"), Target, context.OrganizationService),
+																	 autoNumber.GetAttributeValue<int>("cel_nextnumber").ToString("D" + autoNumber.GetAttributeValue<int>("cel_digits")),
+																	 ReplaceParameters(autoNumber.GetAttributeValue<string>("cel_suffix"), Target, context.OrganizationService));
 
 				// Increment next number in db
 				Entity updatedAutoNumber = new Entity("cel_autonumber");
 				updatedAutoNumber.Id = autoNumber.Id;
 				updatedAutoNumber["cel_nextnumber"] = autoNumber.GetAttributeValue<int>("cel_nextnumber") + 1;
-				updatedAutoNumber["cel_preview"] = Target[autoNumber.GetAttributeValue<string>("cel_attributename")];  // fix the preview
+				updatedAutoNumber["cel_preview"] = Target[targetAttribute];  // fix the preview
 
 				context.OrganizationService.Update(updatedAutoNumber);
 			}
