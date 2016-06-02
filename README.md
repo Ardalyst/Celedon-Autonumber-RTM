@@ -1,6 +1,6 @@
 #Celedon Partners AutoNumber Solution
 
-##What it does right now, v1.0:
+##What it does right now, v1.1:
 * Supports custom prefix and suffix
 * Configurable number of digits
 * All parameters except the entityname and attributename can be modified at any time
@@ -13,6 +13,9 @@
 * Allows runtime parameters to be entered into the Prefix and Suffix fields (See below for instructions)
 * Runtime parameters now support looking up to parent record values
 * Supports nested conditional parameters ie: "else if" conditions
+* NEW: Supports 0 digit numbers (allows fully custom calculated fields, without adding any number)
+* NEW: Added ability to generate random strings
+* NEW: Can now trigger generation on either a Create OR Update event of a record
 
 ##Instructions for Runtime Parameters
 The Prefix and Suffix fields support runtime parameters.  You can enter the name of an attribute into those fields, and the value of that attribute will be inserted into the prefix or suffix when the autonumber is generated.

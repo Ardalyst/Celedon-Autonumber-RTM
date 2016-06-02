@@ -129,12 +129,12 @@ namespace Celedon
 
 			internal Entity PreImage
 			{
-				get { return this.PluginExecutionContext.PreEntityImages.Values.First(); }
+				get { try { return this.PluginExecutionContext.PreEntityImages.Values.First(); } catch { throw new InvalidPluginExecutionException("Pre Image Not Found"); } }
 			}
 
 			internal Entity PostImage
 			{
-				get { return this.PluginExecutionContext.PostEntityImages.Values.First(); }
+				get { try { return this.PluginExecutionContext.PostEntityImages.Values.First(); } catch { throw new InvalidPluginExecutionException("Post Image Not Found"); } }
 			}
 
 			internal T GetInputParameters<T>() where T : class, ICrmRequest

@@ -45,7 +45,7 @@ namespace Celedon
 		// Config: none
 		//
 
-		private const string PLUGIN_NAME = "CeledonPartners.AutoNumber.{0}";
+		internal const string PLUGIN_NAME = "CeledonPartners.AutoNumber.{0}";
 
 		public CreateAutoNumber()
 		{
@@ -58,11 +58,23 @@ namespace Celedon
 			Entity Target = Context.GetInputParameters<CreateInputParameters>().Target;
 			string pluginName = String.Format(PLUGIN_NAME, Target.GetAttributeValue<string>("cel_entityname"));
 
+			if (Target.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1)
+			{
+				pluginName += " Update";
+			}
+
 			Trace("Check for existing plugin step");
 			if (Context.OrganizationDataContext.CreateQuery("sdkmessageprocessingstep").Where(s => s.GetAttributeValue<string>("name").Equals(pluginName)).ToList().Any())
 			{
 				return;  // Step already exists, nothing to do here.
 			}
+
+			Trace("Build the configuration");
+			AutoNumberPluginConfig config = new AutoNumberPluginConfig()
+			{
+				EntityName = Target.GetAttributeValue<string>("cel_entityname"),
+				EventName = Target.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1 ? "Update" : "Create"
+			};
 
 			Trace("Get the Id of this plugin");
 			Guid PluginTypeId = Context.OrganizationDataContext.CreateQuery("plugintype")
@@ -70,19 +82,19 @@ namespace Celedon
 															   .Select(s => s.GetAttributeValue<Guid>("plugintypeid"))
 															   .First();
 
-			Trace("Get the 'Create' message id from this org");
+			Trace("Get the message id from this org");
 			Guid messageId = Context.OrganizationDataContext.CreateQuery("sdkmessage")  
-															.Where(s => s.GetAttributeValue<string>("name").Equals("Create"))
+															.Where(s => s.GetAttributeValue<string>("name").Equals(config.EventName))
 															.Select(s => s.GetAttributeValue<Guid>("sdkmessageid"))
 															.First();
-
-			Trace("Get the filterId for 'Create' for the specific entity from this org");
+			
+			Trace("Get the filterId for for the specific entity from this org");
 			Guid filterId = Context.OrganizationDataContext.CreateQuery("sdkmessagefilter")  
-														   .Where(s => s.GetAttributeValue<string>("primaryobjecttypecode").Equals(Target.GetAttributeValue<string>("cel_entityname"))
+														   .Where(s => s.GetAttributeValue<string>("primaryobjecttypecode").Equals(config.EntityName)
 															   && s.GetAttributeValue<EntityReference>("sdkmessageid").Id.Equals(messageId))
 														   .Select(s => s.GetAttributeValue<Guid>("sdkmessagefilterid"))
 														   .First();
-
+														   
 			Trace("Build new plugin step");
 			Entity newPluginStep = new Entity("sdkmessageprocessingstep")
 			{
@@ -90,13 +102,13 @@ namespace Celedon
 				{
 					{ "name", pluginName },
 					{ "description", pluginName },
-					{ "plugintypeid", PluginTypeId.ToEntityReference("plugintype") },  // This plugin
-					{ "sdkmessageid", messageId.ToEntityReference("sdkmessage") },  // Create Message
-					{ "configuration", Target.GetAttributeValue<string>("cel_entityname") },  // EntityName in the UnsecureConfig
+					{ "plugintypeid", PluginTypeId.ToEntityReference("plugintype") },  // This plugin type
+					{ "sdkmessageid", messageId.ToEntityReference("sdkmessage") },  // Create or Update Message
+					{ "configuration", config.ToJSON() },  // EntityName and RegisteredEvent in the UnsecureConfig
 					{ "stage", PREOPERATION.ToOptionSetValue() },  // Execution Stage: Pre-Operation
 					{ "rank", 1 },
 					{ "impersonatinguserid", Context.PluginExecutionContext.UserId.ToEntityReference("systemuser") },  // Run as SYSTEM user. Assumes we are currently running as the SYSTEM user
-					{ "sdkmessagefilterid", filterId.ToEntityReference("sdkmessagefilter") }
+					{ "sdkmessagefilterid", filterId.ToEntityReference("sdkmessagefilter") },
 				}
 			};
 

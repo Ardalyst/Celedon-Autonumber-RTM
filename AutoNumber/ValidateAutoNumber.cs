@@ -51,7 +51,7 @@ namespace Celedon
 		// Mode: Sync
 		// Config: none
 		//
-		LocalPluginContext Context;
+		private LocalPluginContext Context;
 		private Dictionary<string, List<AttributeMetadata>> EntityMetadata;
 		private Dictionary<string, AttributeMetadata> AttributeMetadata;
 
@@ -77,6 +77,12 @@ namespace Celedon
 			if (!attributeList.Select(a => a.LogicalName).Contains(Target.GetAttributeValue<string>("cel_attributename")))
 			{
 				throw new InvalidPluginExecutionException("Specified Attribute does not exist.");
+			}
+
+			Trace("Validate the Trigger Attribute (if any)");
+			if (!String.IsNullOrEmpty(Target.GetAttributeValue<string>("cel_triggerattribute")) && !attributeList.Select(a => a.LogicalName).Contains(Target.GetAttributeValue<string>("cel_triggerattribute")))
+			{
+				throw new InvalidPluginExecutionException("Specified Trigger Attribute does not exist.");
 			}
 
 			Trace("Validate the Attribute type");

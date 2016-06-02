@@ -27,6 +27,7 @@ SOFTWARE.
 using System;
 using System.Linq;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Query;
 
 namespace Celedon
 {
@@ -36,16 +37,30 @@ namespace Celedon
 		// This is the main plugin that creates the numbers and adds them to new records
 		// This plugin is not registered by default.  It is registered and unregistered dynamically by the CreateAutoNumber and DeleteAutoNumber plugins respectively
 		//
-		public getNextAutoNumber(string entityName, string secureConfig)
+
+		private AutoNumberPluginConfig config;
+
+		public getNextAutoNumber(string pluginConfig, string secureConfig)
 		{
-			RegisterEvent(PREOPERATION, CREATEMESSAGE, entityName, Execute);
+			// Need to support older version
+			if (pluginConfig.TryParseJSON<AutoNumberPluginConfig>(out config))
+			{
+					RegisterEvent(PREOPERATION, config.EventName, config.EntityName, Execute);
+			}
+			else
+			{
+				RegisterEvent(PREOPERATION, CREATEMESSAGE, pluginConfig, Execute);
+			}
+
+			
 		}
 
 		protected void Execute(LocalPluginContext context)
 		{
 			#region Get the list of autonumber records applicable to the Target entity type
+			int triggerEvent = context.PluginExecutionContext.MessageName == "Update" ? 1 : 0;
 			var autoNumberIdList = context.OrganizationDataContext.CreateQuery("cel_autonumber")
-																  .Where(a => a.GetAttributeValue<string>("cel_entityname").Equals(context.PluginExecutionContext.PrimaryEntityName) && a.GetAttributeValue<OptionSetValue>("statecode").Value == 0)
+																  .Where(a => a.GetAttributeValue<string>("cel_entityname").Equals(context.PluginExecutionContext.PrimaryEntityName) && a.GetAttributeValue<OptionSetValue>("statecode").Value == 0 && a.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == triggerEvent)
 																  .OrderBy(a => a.GetAttributeValue<Guid>("cel_autonumberid"))  // Insure they are ordered, to prevent deadlocks
 																  .Select(a => a.GetAttributeValue<Guid>("cel_autonumberid"));
 			#endregion
@@ -62,29 +77,34 @@ namespace Celedon
 			#endregion
 
 			#region This loop populates the Target record, and updates the autonumber record(s)
-			Entity Target = context.GetInputParameters<CreateInputParameters>().Target;
+			Entity Target = context.PluginExecutionContext.InputParameters["Target"] as Entity;
 
 			foreach (Guid autoNumberId in autoNumberIdList)
 			{
 				Entity autoNumber = context.OrganizationService.Retrieve("cel_autonumber", autoNumberId, true);
 				string targetAttribute = autoNumber.GetAttributeValue<string>("cel_attributename");
 
-				if ((autoNumber.Contains("cel_conditionaloptionset") && (!Target.Contains(autoNumber.GetAttributeValue<string>("cel_conditionaloptionset")) || Target.GetAttributeValue<OptionSetValue>(autoNumber.GetAttributeValue<string>("cel_conditionaloptionset")).Value != autoNumber.GetAttributeValue<int>("cel_conditionalvalue"))))
+				#region Check conditions that prevent creating an autonumber
+				if (context.PluginExecutionContext.MessageName == "Update" && !Target.Contains(autoNumber.GetAttributeValue<string>("cel_triggerattribute")))
+				{
+					continue;  // Continue, if this is an Update event and the Target does not contain the trigger value
+				}
+				else if ((autoNumber.Contains("cel_conditionaloptionset") && (!Target.Contains(autoNumber.GetAttributeValue<string>("cel_conditionaloptionset")) || Target.GetAttributeValue<OptionSetValue>(autoNumber.GetAttributeValue<string>("cel_conditionaloptionset")).Value != autoNumber.GetAttributeValue<int>("cel_conditionalvalue"))))
 				{
 					continue;  // Continue, if this is a conditional optionset
 				}
-				//else if (autoNumber.Contains("cel_conditionallookup") && (!Target.Contains(autoNumber.GetAttributeValue<string>("cel_conditionallookup")) || Target.GetAttributeValue<EntityReference>(autoNumber.GetAttributeValue<string>("cel_conditionallookup")).Id != Guid.Parse(autoNumber.GetAttributeValue<string>("cel_conditionallookupvalue"))))
-				//{
-				//	continue;  // Continue, if this is a conditional lookup
-				//}
 				else if (Target.Contains(targetAttribute) && !String.IsNullOrWhiteSpace(Target.GetAttributeValue<string>(targetAttribute)))
 				{
 					continue;  // Continue, so we don't overwrite an existing value
 				}
+				#endregion
+
+				#region Create the AutoNumber
+				int numDigits = autoNumber.GetAttributeValue<int>("cel_digits");
 
 				// Generate number and insert into Target Record
 				Target[targetAttribute] = String.Format("{0}{1}{2}", ReplaceParameters(autoNumber.GetAttributeValue<string>("cel_prefix"), Target, context.OrganizationService),
-																	 autoNumber.GetAttributeValue<int>("cel_nextnumber").ToString("D" + autoNumber.GetAttributeValue<int>("cel_digits")),
+																	 numDigits == 0 ? "" : autoNumber.GetAttributeValue<int>("cel_nextnumber").ToString("D" + numDigits),
 																	 ReplaceParameters(autoNumber.GetAttributeValue<string>("cel_suffix"), Target, context.OrganizationService));
 
 				// Increment next number in db
@@ -94,6 +114,7 @@ namespace Celedon
 				updatedAutoNumber["cel_preview"] = Target[targetAttribute];  // fix the preview
 
 				context.OrganizationService.Update(updatedAutoNumber);
+				#endregion
 			}
 			#endregion
 		}
@@ -116,7 +137,7 @@ namespace Celedon
 				{
 					if (Target.Contains(param.ParentLookupName))
 					{
-						var parentRecord = Service.Retrieve(Target.GetAttributeValue<EntityReference>(param.ParentLookupName).LogicalName, Target.GetAttributeValue<EntityReference>(param.ParentLookupName).Id, new Microsoft.Xrm.Sdk.Query.ColumnSet(param.AttributeName));
+						var parentRecord = Service.Retrieve(Target.GetAttributeValue<EntityReference>(param.ParentLookupName).LogicalName, Target.GetAttributeValue<EntityReference>(param.ParentLookupName).Id, new ColumnSet(param.AttributeName));
 						text = text.Replace(param.ParameterText, param.GetParameterValue(parentRecord));
 					}
 					else  // Target record has no parent, so use default value

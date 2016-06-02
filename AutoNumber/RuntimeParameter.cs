@@ -63,18 +63,25 @@ namespace Celedon
 				string[] paramList = rp.AttributeName.Split(':');
 				rp.AttributeName = paramList[0];
 
-				if (paramList[1].Contains('?'))
-				{
-					rp.Conditional = ConditionalFormatter.Parse(paramList[1]);
-				}
-				else if (paramList.Length > 2)
+				if (rp.AttributeName == "rand")
 				{
 					rp.StringFormatter = paramList[1];
-					rp.Conditional = ConditionalFormatter.Parse(paramList[2]);
 				}
 				else
 				{
-					rp.StringFormatter = paramList[1];
+					if (paramList[1].Contains('?'))
+					{
+						rp.Conditional = ConditionalFormatter.Parse(paramList[1]);
+					}
+					else if (paramList.Length > 2)
+					{
+						rp.StringFormatter = paramList[1];
+						rp.Conditional = ConditionalFormatter.Parse(paramList[2]);
+					}
+					else
+					{
+						rp.StringFormatter = paramList[1];
+					}
 				}
 			}
 
@@ -147,6 +154,40 @@ namespace Celedon
 					return Conditional.GetResult(Target[AttributeName].ToString());
 				}
 			}
+			else if (AttributeName.Equals("rand"))
+			{
+				string length = "";
+				string stringStyle = "upper";
+				int stringLength = 5;  // Seems like reasonable default
+
+				if (StringFormatter.Contains('?'))
+				{
+					length = StringFormatter.Split('?')[0];
+					stringStyle = StringFormatter.Split('?')[1].ToLower();
+				}
+				else
+				{
+					length = StringFormatter;
+				}
+
+				if (!Int32.TryParse(length, out stringLength))
+				{
+					stringLength = 5;
+				}
+
+				string stringValues = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+				if (stringStyle == "mix")
+				{
+					stringValues = stringValues + stringValues.ToLower();
+				}
+				else if (stringStyle == "lower")
+				{
+					stringValues = stringValues.ToLower();
+				}
+
+				Random rnd = new Random();
+				return String.Join("", Enumerable.Range(0, stringLength).Select(n => stringValues[rnd.Next(stringValues.Length)]));
+			}
 
 			return DefaultValue;
 		}
@@ -154,6 +195,11 @@ namespace Celedon
 		public bool IsParentParameter()
 		{
 			return !String.IsNullOrEmpty(ParentLookupName);
+		}
+
+		public bool IsRandomParameter()
+		{
+			return AttributeName.Equals("rand");
 		}
 
 		public class ConditionalFormatter

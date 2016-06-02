@@ -58,19 +58,27 @@ namespace Celedon
 
 		protected void Execute(LocalPluginContext Context)
 		{
+			int triggerEvent = Context.PreImage.Contains("cel_triggerevent") && Context.PreImage.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1 ? 1 : 0;
+
 			var remainingAutoNumberList = Context.OrganizationDataContext.CreateQuery("cel_autonumber")
-																		 .Where(s => s.GetAttributeValue<string>("cel_entityname").Equals(Context.PostImage.GetAttributeValue<string>("cel_entityname")))
-																		 .Select(s => s.GetAttributeValue<Guid>("cel_autonumberid"))
+																		 .Where(s => s.GetAttributeValue<string>("cel_entityname").Equals(Context.PreImage.GetAttributeValue<string>("cel_entityname")))
+																		 .Select(s => new { Id = s.GetAttributeValue<Guid>("cel_autonumberid"), TriggerEvent = s.Contains("cel_triggerevent") ? s.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value : 0  })
 																		 .ToList();
 
-			if (remainingAutoNumberList.Any())  // If there are still other autonumber records on this entity, then do nothing.
+			if (remainingAutoNumberList.Any(s => s.TriggerEvent == triggerEvent ))  // If there are still other autonumber records on this entity, then do nothing.
 			{
 				return;  
 			}
 
 			// Find and remove the registerd plugin
+			string pluginName = String.Format(CreateAutoNumber.PLUGIN_NAME, Context.PreImage.GetAttributeValue<string>("cel_entityname"));
+			if (Context.PreImage.Contains("cel_triggerevent") && Context.PreImage.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1)
+			{
+				pluginName += " Update";
+			}
+
 			var pluginStepList = Context.OrganizationDataContext.CreateQuery("sdkmessageprocessingstep")
-																.Where(s => s.GetAttributeValue<string>("name").Equals("CeledonPartners.AutoNumber." + Context.PostImage.GetAttributeValue<string>("cel_entityname")))
+																.Where(s => s.GetAttributeValue<string>("name").Equals(pluginName))
 																.Select(s => s.GetAttributeValue<Guid>("sdkmessageprocessingstepid"))
 																.ToList();
 
@@ -78,7 +86,7 @@ namespace Celedon
 			{
 				return;  
 			}
-
+			
 			// Delete plugin step
 			Context.OrganizationService.Delete("sdkmessageprocessingstep", pluginStepList.First());
 		}

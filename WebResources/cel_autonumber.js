@@ -28,6 +28,7 @@ var CeledonPartners = (function (CeledonPartners) {
 		if (Xrm.Page.ui.getFormType() != 1) {
 			Xrm.Page.getControl("cel_entityname").setDisabled(true);
 			Xrm.Page.getControl("cel_attributename").setDisabled(true);
+			Xrm.Page.getControl("cel_triggerevent").setDisabled(true);
 			CeledonPartners.GeneratePreview();
 		}
 		Xrm.Page.getAttribute("cel_preview").setSubmitMode("never");
