@@ -1,6 +1,6 @@
-#Celedon Partners AutoNumber Solution
+# Celedon Partners AutoNumber Solution
 
-##What it does right now, v1.1:
+## What it does right now, v1.1:
 * Supports custom prefix and suffix
 * Configurable number of digits
 * All parameters except the entityname and attributename can be modified at any time
@@ -17,17 +17,17 @@
 * NEW: Added ability to generate random strings
 * NEW: Can now trigger generation on either a Create OR Update event of a record
 
-##Instructions for Runtime Parameters
+## Instructions for Runtime Parameters
 The Prefix and Suffix fields support runtime parameters.  You can enter the name of an attribute into those fields, and the value of that attribute will be inserted into the prefix or suffix when the autonumber is generated.
 
 * Parameters are specified using curly braces, eg: {new_attributename}
 * You can inter-mix parameters with hardcoded values: {new_att}id
 * You can enter multiple parameters, or the same parameter multiple times: {new_att1}-{new_att2}
 
-###Advanced/Optional Runtime Parameters
+### Advanced/Optional Runtime Parameters
 If any optional parameters are used, then the attribute name must always be the first parameter specified.
 
-####Parent Record Values (Optional)
+#### Parent Record Values (Optional)
 It's possible to retrieve values from a parent record to use in a child autonumber.
 Enter the name of the parent record lookup followed by the attribute from the parent record, separated by a dot .
 The format for specifying a parent field is: {lookupAttributeName.parentAttributeName}
@@ -35,14 +35,14 @@ Example: {originatingleadid.industrycode}
 
 * All other optional parameters are still supported when using a parent record value
 
-####Default Value (Optional)
+#### Default Value (Optional)
 You can specify a default value after the attributeName using a | character.  The default value will be used in the autonumber if the attribute is null or empty.
 The default value, if used, must be the first parameter following the attribute name.
 
 Example: {new_name|NONAME}
 If the new_name attribute contains data, then that value will be used in the autonumber.  But if new_name is empty, then the value NONAME will be used in the autonumber.
 
-####Formatting String (Optional)
+#### Formatting String (Optional)
 If the parameter attribute is a number or a date field, you can specify custom formatting using a colon, eg: {new_numberfield:D2} or {new_datefield:yyyy}
 The formatting parameter, if used, must be the first parameter following the attribute name or default value.
 
@@ -52,7 +52,7 @@ Example: To insert the 4 digit year into an autonumber: {createdon:yyyy} or 2 di
 * Full details on supported formatting options for datetime here: https://msdn.microsoft.com/en-us/library/8kb3ddd4(v=vs.110).aspx
 * Use of the time separator : when specifying custom date/time formats is NOT supported
 
-####Conditional Operator (Optional)
+#### Conditional Operator (Optional)
 You can specify conditional parameters using the : ? | characters.
 The conditional parameter must always be the last parameter specified.
 
@@ -68,13 +68,13 @@ If the value of new_attribute equals the matchValue, then the autonumber will us
 * Numeric and DateTime attributes support GreaterThan and LessThan operations.  This is done by prefixing the match value with either a '>' or '<' character. eg: {attributeName:<100?low|high}
 * If a Numeric or DateTime value is used as a matchValue, the value entered must be parsable to the appropriate type
 
-####Nested Conditional Operators (Optional)
+#### Nested Conditional Operators (Optional)
 Conditional parameters can be infinitely nested within each other.  This basically allows an "If(), Else If(), Else If(), Else()" logic to occur.
 
 Example: {attributeName:match1?result2|match2?result2|match3?result3|elseResult}
 In this example, if the attribute value equals "match1", then the number will use "result1", if attributeValue equals match2, then it will use result2.  If attributeValue equals none of the specified match values, then it will use the "elseResult" value.
 
-####Sample Valid Parameter Strings:
+#### Sample Valid Parameter Strings:
 
 * attribute only: **{attributeName}**
 * parent attribute only: **{parentLookup.parentAttribute}**
