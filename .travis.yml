@@ -1,0 +1,4 @@
+language: csharp
+solution: AutoNumber.sln
+install:
+  - nuget restore AutoNumber.sln
