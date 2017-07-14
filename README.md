@@ -1,22 +1,13 @@
 # Celedon Partners Dynamics CRM AutoNumber
 Provides auto-numbering to Dynamics CRM.
 
-## Build
-```{r, echo=FALSE, eval=TRUE, results="asis"}
-travis_url <- "https://travis-ci.org/BESDev/Celedon-Autonumber-RTM.svg?branch="
-shield <- paste0("[![Build Status](",
-                 travis_url,
-                 system("git rev-parse --abbrev-ref HEAD", intern = TRUE),
-                 ")](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM)")
-cat(shield)
-```
 **Build status**
 
-master: 
-[![Build Status](https://travis-ci.org/Celedon-Autonumber-RTM/miniCRAN.svg?branch=master)](https://travis-ci.org/Celedon-Autonumber-RTM/miniCRAN)
 release:
-[![Build Status](https://travis-ci.org/Celedon-Autonumber-RTM/miniCRAN.svg?branch=release)](https://travis-ci.org/Celedon-Autonumber-RTM/miniCRAN)
-dev: [![Build Status](https://travis-ci.org/Celedon-Autonumber-RTM/miniCRAN.svg?branch=dev)](https://travis-ci.org/Celedon-Autonumber-RTM/miniCRAN)
+[![Build Status](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM.svg?branch=release)](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM/branches)
+master: 
+[![Build Status](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM.svg?branch=master)](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM/branches)
+dev: [![Build Status](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM.svg?branch=develop)](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM/branches)
 
 ## How To Build
 You required the following to build AutoNumber:
