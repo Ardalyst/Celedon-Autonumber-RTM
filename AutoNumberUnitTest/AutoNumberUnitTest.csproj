@@ -56,12 +56,6 @@
     <Compile Include="UnitTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\AutoNumber\AutoNumber.csproj">
-      <Project>{3ecaf282-5b06-4668-8e23-1cdf8e390b7c}</Project>
-      <Name>AutoNumber</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
