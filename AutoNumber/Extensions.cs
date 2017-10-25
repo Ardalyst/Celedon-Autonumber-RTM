@@ -1,5 +1,4 @@
-﻿// Author: Matt Barnes (matt.barnes@celedonpartners.com)
-/*The MIT License (MIT)
+﻿/*The MIT License (MIT)
 
 Copyright (c) 2015 Celedon Partners 
 
@@ -29,7 +28,6 @@ using System.IO;
 using System.Text;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
-
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 
@@ -39,11 +37,40 @@ namespace Celedon
 	// Use these and add to these to make our plugins a little shorter/cleaner/leaner
 	public static class Extensions
 	{
-		// Used to get values from context inputparameters and outputparameters, of a specific type rather than handling the Object type in our code.
-		public static bool TryGetValue<T>(this ParameterCollection parameterCollection, string key, out T value)
+	    public static string ReplaceParameters(this IOrganizationService service, Entity target, string text)
+	    {
+	        if (string.IsNullOrWhiteSpace(text))
+	        {
+	            return "";
+	        }
+
+	        foreach (var param in RuntimeParameter.GetParametersFromString(text))
+	        {
+	            if (!param.IsParentParameter())
+	            {
+	                text = text.Replace(param.ParameterText, param.GetParameterValue(target));
+	            }
+	            else
+	            {
+	                if (target.Contains(param.ParentLookupName))
+	                {
+	                    var parentRecord = service.Retrieve(target.GetAttributeValue<EntityReference>(param.ParentLookupName).LogicalName, target.GetAttributeValue<EntityReference>(param.ParentLookupName).Id, new ColumnSet(param.AttributeName));
+	                    text = text.Replace(param.ParameterText, param.GetParameterValue(parentRecord));
+	                }
+	                else  // target record has no parent, so use default value
+	                {
+	                    text = text.Replace(param.ParameterText, param.DefaultValue);
+	                }
+	            }
+	        }
+
+	        return text;
+	    }
+
+        // Used to get values from context inputparameters and outputparameters, of a specific type rather than handling the Object type in our code.
+        public static bool TryGetValue<T>(this ParameterCollection parameterCollection, string key, out T value)
 		{
-			object valueObj;
-			if (parameterCollection.TryGetValue(key, out valueObj))
+		    if (parameterCollection.TryGetValue(key, out var valueObj))
 			{
 				try
 				{
@@ -60,8 +87,7 @@ namespace Celedon
 		// NotNull because Plugins attached to custom Actions recieve ALL input parameters, even if they were not included in the original Action context
 		public static bool TryGetValueNotNull<T>(this ParameterCollection parameterCollection, string key, out T value)
 		{
-			object valueObj;
-			if (parameterCollection.TryGetValue(key, out valueObj))
+		    if (parameterCollection.TryGetValue(key, out var valueObj))
 			{
 				if (valueObj != null)
 				{
@@ -85,14 +111,14 @@ namespace Celedon
 		}
 
 		// Parse JSON string to object - CRM Online compatible
-		public static T ParseJSON<T>(this string jsonString, bool useSimpleDictionaryFormat = true)
+		public static T ParseJson<T>(this string jsonString)
 		{
 			try
 			{
-				DataContractJsonSerializer JsonDeserializer = new DataContractJsonSerializer(typeof(T));
-				using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonString)))
+				var jsonDeserializer = new DataContractJsonSerializer(typeof(T));
+				using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonString)))
 				{
-					return (T)JsonDeserializer.ReadObject(stream);
+					return (T)jsonDeserializer.ReadObject(stream);
 				}
 			}
 			catch
@@ -102,11 +128,11 @@ namespace Celedon
 		}
 
 		// Try Parse JSON string to object - CRM Online compatible
-		public static bool TryParseJSON<T>(this string jsonString, out T obj, bool useSimpleDictionaryFormat = true)
+		public static bool TryParseJson<T>(this string jsonString, out T obj)
 		{
 			try
 			{
-				obj = jsonString.ParseJSON<T>(useSimpleDictionaryFormat);
+				obj = jsonString.ParseJson<T>();
 				return true;
 			}
 			catch
@@ -117,20 +143,14 @@ namespace Celedon
 		}
 
 		// Convert object to JSON string - CRM Online compatible
-		public static string ToJSON(this object obj, bool useSimpleDictionaryFormat = true)
+		public static string ToJson(this object obj, bool useSimpleDictionaryFormat = true)
 		{
-			DataContractJsonSerializer JsonSerializer = new DataContractJsonSerializer(obj.GetType());
-			using (MemoryStream stream = new MemoryStream())
+			var jsonSerializer = new DataContractJsonSerializer(obj.GetType());
+			using (var stream = new MemoryStream())
 			{
-				JsonSerializer.WriteObject(stream, obj);
+				jsonSerializer.WriteObject(stream, obj);
 				return Encoding.UTF8.GetString(stream.ToArray());
 			}
-		}
-
-		// A slightly easier way to retreive all columns
-		public static Entity Retrieve(this IOrganizationService service, string entityName, Guid entityId, bool allColumns)
-		{
-			return service.Retrieve(entityName, entityId, new ColumnSet(allColumns));
 		}
 
 		// Easily convert Guid to EntityReference

@@ -7,8 +7,8 @@
     <ProjectGuid>{56E63E6D-35E9-48B5-A549-1321610F197A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AutoNumber</RootNamespace>
-    <AssemblyName>AutoNumber</AssemblyName>
+    <RootNamespace>Celedon</RootNamespace>
+    <AssemblyName>Celedon.AutoNumber</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -70,11 +70,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoNumberPluginConfig.cs" />
-    <Compile Include="CeledonExtensions.cs" />
     <Compile Include="CeledonPlugin.cs" />
+    <Compile Include="Constants\PipelineMessage.cs" />
+    <Compile Include="Constants\PipelineStage.cs" />
     <Compile Include="CreateAutoNumber.cs" />
     <Compile Include="DeleteAutoNumber.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="GetNextAutoNumber.cs" />
+    <Compile Include="LocalPluginContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>

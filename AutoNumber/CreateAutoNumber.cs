@@ -1,5 +1,4 @@
-﻿// Author: Matt Barnes (matt.barnes@celedonpartners.com)
-/*The MIT License (MIT)
+﻿/*The MIT License (MIT)
 
 Copyright (c) 2015 Celedon Partners 
 
@@ -26,8 +25,8 @@ SOFTWARE.
 
 using System;
 using System.Linq;
-using System.Collections.Generic;
 using Microsoft.Xrm.Sdk;
+using Celedon.Constants;
 
 namespace Celedon
 {
@@ -39,81 +38,81 @@ namespace Celedon
 		// Registration Details:
 		// Message: Create
 		// Primary Entity: cel_autonumber
-		// User Context: SYSTEM
+		// User context: SYSTEM
 		// Event Pipeline: Post
 		// Mode: Async
 		// Config: none
 		//
 
-		internal const string PLUGIN_NAME = "CeledonPartners.AutoNumber.{0}";
+		internal const string PluginName = "CeledonPartners.AutoNumber.{0}";
 
 		public CreateAutoNumber()
 		{
-			RegisterEvent(POSTOPERATION, CREATEMESSAGE, "cel_autonumber", Execute);
+			RegisterEvent(PipelineStage.PostOperation, PipelineMessage.Create, "cel_autonumber", Execute);
 		}
 
-		protected void Execute(LocalPluginContext Context)
+		protected void Execute(LocalPluginContext context)
 		{
-			Trace("Get Target record");
-			Entity Target = Context.GetInputParameters<CreateInputParameters>().Target;
-			string pluginName = String.Format(PLUGIN_NAME, Target.GetAttributeValue<string>("cel_entityname"));
+		    context.Trace("Get Target record");
+			var target = context.GetInputParameters<CreateInputParameters>().Target;
+			var pluginName = string.Format(PluginName, target.GetAttributeValue<string>("cel_entityname"));
 
-			if (Target.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1)
+			if (target.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1)
 			{
 				pluginName += " Update";
 			}
 
-			Trace("Check for existing plugin step");
-			if (Context.OrganizationDataContext.CreateQuery("sdkmessageprocessingstep").Where(s => s.GetAttributeValue<string>("name").Equals(pluginName)).ToList().Any())
+		    context.Trace("Check for existing plugin step");
+			if (context.OrganizationDataContext.CreateQuery("sdkmessageprocessingstep").Where(s => s.GetAttributeValue<string>("name").Equals(pluginName)).ToList().Any())
 			{
 				return;  // Step already exists, nothing to do here.
 			}
 
-			Trace("Build the configuration");
-			AutoNumberPluginConfig config = new AutoNumberPluginConfig()
+		    context.Trace("Build the configuration");
+			var config = new AutoNumberPluginConfig()
 			{
-				EntityName = Target.GetAttributeValue<string>("cel_entityname"),
-				EventName = Target.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1 ? "Update" : "Create"
+				EntityName = target.GetAttributeValue<string>("cel_entityname"),
+				EventName = target.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1 ? "Update" : "Create"
 			};
 
-			Trace("Get the Id of this plugin");
-			Guid PluginTypeId = Context.OrganizationDataContext.CreateQuery("plugintype")
-				 											   .Where(s => s.GetAttributeValue<string>("name").Equals("Celedon.GetNextAutoNumber"))
+		    context.Trace("Get the Id of this plugin");
+		    var pluginTypeId = context.OrganizationDataContext.CreateQuery("plugintype")
+				 											   .Where(s => s.GetAttributeValue<string>("name").Equals(typeof(GetNextAutoNumber).FullName))
 															   .Select(s => s.GetAttributeValue<Guid>("plugintypeid"))
 															   .First();
 
-			Trace("Get the message id from this org");
-			Guid messageId = Context.OrganizationDataContext.CreateQuery("sdkmessage")  
+		    context.Trace("Get the message id from this org");
+		    var messageId = context.OrganizationDataContext.CreateQuery("sdkmessage")  
 															.Where(s => s.GetAttributeValue<string>("name").Equals(config.EventName))
 															.Select(s => s.GetAttributeValue<Guid>("sdkmessageid"))
 															.First();
-			
-			Trace("Get the filterId for for the specific entity from this org");
-			Guid filterId = Context.OrganizationDataContext.CreateQuery("sdkmessagefilter")  
+
+		    context.Trace("Get the filterId for for the specific entity from this org");
+			var filterId = context.OrganizationDataContext.CreateQuery("sdkmessagefilter")  
 														   .Where(s => s.GetAttributeValue<string>("primaryobjecttypecode").Equals(config.EntityName)
 															   && s.GetAttributeValue<EntityReference>("sdkmessageid").Id.Equals(messageId))
 														   .Select(s => s.GetAttributeValue<Guid>("sdkmessagefilterid"))
 														   .First();
-														   
-			Trace("Build new plugin step");
-			Entity newPluginStep = new Entity("sdkmessageprocessingstep")
+
+		    context.Trace("Build new plugin step");
+			var newPluginStep = new Entity("sdkmessageprocessingstep")
 			{
 				Attributes = new AttributeCollection()
 				{
 					{ "name", pluginName },
 					{ "description", pluginName },
-					{ "plugintypeid", PluginTypeId.ToEntityReference("plugintype") },  // This plugin type
+					{ "plugintypeid", pluginTypeId.ToEntityReference("plugintype") },  // This plugin type
 					{ "sdkmessageid", messageId.ToEntityReference("sdkmessage") },  // Create or Update Message
-					{ "configuration", config.ToJSON() },  // EntityName and RegisteredEvent in the UnsecureConfig
-					{ "stage", PREOPERATION.ToOptionSetValue() },  // Execution Stage: Pre-Operation
+					{ "configuration", config.ToJson() },  // EntityName and RegisteredEvent in the UnsecureConfig
+					{ "stage", PipelineStage.PreOperation.ToOptionSetValue() },  // Execution Stage: Pre-Operation
 					{ "rank", 1 },
-					{ "impersonatinguserid", Context.PluginExecutionContext.UserId.ToEntityReference("systemuser") },  // Run as SYSTEM user. Assumes we are currently running as the SYSTEM user
+					{ "impersonatinguserid", context.PluginExecutionContext.UserId.ToEntityReference("systemuser") },  // Run as SYSTEM user. Assumes we are currently running as the SYSTEM user
 					{ "sdkmessagefilterid", filterId.ToEntityReference("sdkmessagefilter") },
 				}
 			};
 
-			Trace("Create new plugin step");
-			Guid pluginStepId = Context.OrganizationService.Create(newPluginStep);
+		    context.Trace("Create new plugin step");
+			context.OrganizationService.Create(newPluginStep);
 		}
 	}
 }
