@@ -1,5 +1,4 @@
-﻿// Author: Matt Barnes (matt.barnes@celedonpartners.com)
-/*The MIT License (MIT)
+﻿/*The MIT License (MIT)
 
 Copyright (c) 2015 Celedon Partners 
 
@@ -27,6 +26,7 @@ SOFTWARE.
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.Xrm.Sdk;
 
@@ -34,6 +34,8 @@ namespace Celedon
 {
 	public class RuntimeParameter
 	{
+	    private static readonly Random Random = new Random();
+
 		public string ParameterText { get; private set; }
 		public string AttributeName { get; private set; }
 		public string ParentLookupName { get; private set; }
@@ -54,11 +56,13 @@ namespace Celedon
 
 		public static RuntimeParameter Parse(string input)
 		{
-			RuntimeParameter rp = new RuntimeParameter();
-			rp.ParameterText = input;
-			rp.AttributeName = input.Trim('{', '}');
+		    var rp = new RuntimeParameter
+		    {
+		        ParameterText = input,
+		        AttributeName = input.Trim('{', '}')
+		    };
 
-			if (rp.AttributeName.Contains(':'))
+		    if (rp.AttributeName.Contains(':'))
 			{
 				string[] paramList = rp.AttributeName.Split(':');
 				rp.AttributeName = paramList[0];
@@ -102,65 +106,46 @@ namespace Celedon
 
 		public static IEnumerable<RuntimeParameter> GetParametersFromString(string text)
 		{
-			foreach (string p in Regex.Matches(text, @"{(.*?)}").OfType<Match>().Select(m => m.Groups[0].Value).Distinct())
-			{
-				yield return Parse(p);
-			}
+		    return Regex.Matches(text, @"{(.*?)}").OfType<Match>().Select(m => m.Groups[0].Value).Distinct().Select(Parse);
 		}
 
-		public string GetParameterValue(Entity Target)
+		public string GetParameterValue(Entity target)
 		{
-			if (Target.Contains(AttributeName))
+			if (target.Contains(AttributeName))
 			{
-				if (Target[AttributeName] is EntityReference)
-				{
-					// Lookup condition is based on GUID
-					return Conditional.HasCondition ? Conditional.GetResult(Target.GetAttributeValue<EntityReference>(AttributeName).Id) : Target.GetAttributeValue<EntityReference>(AttributeName).Name;
-				}
-				else if (Target[AttributeName] is OptionSetValue)
-				{
-					// Conditional OptionSetValue is based on the integer value
-					return Conditional.HasCondition ? Conditional.GetResult(Target.GetAttributeValue<OptionSetValue>(AttributeName).Value.ToString()) : Target.FormattedValues[AttributeName];
-				}
-				else if (Target[AttributeName] is bool)
-				{
-					// Note: Boolean values ignore the match value, they just use the attribute value itself as the condition
-					return Conditional.HasCondition ? Conditional.GetResult(Target.GetAttributeValue<bool>(AttributeName)) : Target.FormattedValues[AttributeName];
-				}
-				else if (Target[AttributeName] is DateTime)
-				{
-					// If there is a format AND a condition, apply formatting first, then evaluate condition as a string
-					// If there is a condition without any format, evaluate condition as DateTime
-					return String.IsNullOrEmpty(StringFormatter) ? Conditional.GetResult(Target.GetAttributeValue<DateTime>(AttributeName)) : Conditional.GetResult(Target.GetAttributeValue<DateTime>(AttributeName).ToString(StringFormatter));
-				}
-				else if (Target[AttributeName] is Money)
-				{
-					return Conditional.HasCondition ? Conditional.GetResult(Target.GetAttributeValue<Money>(AttributeName).Value) : Target.GetAttributeValue<Money>(AttributeName).Value.ToString(StringFormatter);
-				}
-				else if (Target[AttributeName] is int)
-				{
-					return Conditional.HasCondition ? Conditional.GetResult(Target.GetAttributeValue<double>(AttributeName)) : Target.GetAttributeValue<double>(AttributeName).ToString(StringFormatter);
-				}
-				else if (Target[AttributeName] is decimal)
-				{
-					return Conditional.HasCondition ? Conditional.GetResult(Target.GetAttributeValue<decimal>(AttributeName)) : Target.GetAttributeValue<decimal>(AttributeName).ToString(StringFormatter);
-				}
-				else if (Target[AttributeName] is double)
-				{
-					return Conditional.HasCondition ? Conditional.GetResult(Target.GetAttributeValue<double>(AttributeName)) : Target.GetAttributeValue<double>(AttributeName).ToString(StringFormatter);
-				}
-				else if (Target[AttributeName] is string)
-				{
-					return Conditional.GetResult(Target[AttributeName].ToString());
-				}
+			    switch (target[AttributeName])
+			    {
+			        case EntityReference _:
+			            // Lookup condition is based on GUID
+			            return Conditional.HasCondition ? Conditional.GetResult(target.GetAttributeValue<EntityReference>(AttributeName).Id) : target.GetAttributeValue<EntityReference>(AttributeName).Name;
+			        case OptionSetValue _:
+			            // Conditional OptionSetValue is based on the integer value
+			            return Conditional.HasCondition ? Conditional.GetResult(target.GetAttributeValue<OptionSetValue>(AttributeName).Value.ToString()) : target.FormattedValues[AttributeName];
+			        case bool _:
+			            // Note: Boolean values ignore the match value, they just use the attribute value itself as the condition
+			            return Conditional.HasCondition ? Conditional.GetResult(target.GetAttributeValue<bool>(AttributeName)) : target.FormattedValues[AttributeName];
+			        case DateTime _:
+			            // If there is a format AND a condition, apply formatting first, then evaluate condition as a string
+			            // If there is a condition without any format, evaluate condition as DateTime
+			            return string.IsNullOrEmpty(StringFormatter) ? Conditional.GetResult(target.GetAttributeValue<DateTime>(AttributeName)) : Conditional.GetResult(target.GetAttributeValue<DateTime>(AttributeName).ToString(StringFormatter));
+			        case Money _:
+			            return Conditional.HasCondition ? Conditional.GetResult(target.GetAttributeValue<Money>(AttributeName).Value) : target.GetAttributeValue<Money>(AttributeName).Value.ToString(StringFormatter);
+			        case int _:
+			            return Conditional.HasCondition ? Conditional.GetResult(target.GetAttributeValue<double>(AttributeName)) : target.GetAttributeValue<double>(AttributeName).ToString(StringFormatter);
+			        case decimal _:
+			            return Conditional.HasCondition ? Conditional.GetResult(target.GetAttributeValue<decimal>(AttributeName)) : target.GetAttributeValue<decimal>(AttributeName).ToString(StringFormatter);
+			        case double _:
+			            return Conditional.HasCondition ? Conditional.GetResult(target.GetAttributeValue<double>(AttributeName)) : target.GetAttributeValue<double>(AttributeName).ToString(StringFormatter);
+			        case string _:
+			            return Conditional.GetResult(target[AttributeName].ToString());
+			    }
 			}
 			else if (AttributeName.Equals("rand"))
 			{
-				string length = "";
-				string stringStyle = "upper";
-				int stringLength = 5;  // Seems like reasonable default
+				string length;
+				var stringStyle = "upper";
 
-				if (StringFormatter.Contains('?'))
+			    if (StringFormatter.Contains('?'))
 				{
 					length = StringFormatter.Split('?')[0];
 					stringStyle = StringFormatter.Split('?')[1].ToLower();
@@ -170,23 +155,21 @@ namespace Celedon
 					length = StringFormatter;
 				}
 
-				if (!Int32.TryParse(length, out stringLength))
+				if (!int.TryParse(length, out var stringLength))
 				{
 					stringLength = 5;
 				}
 
-				string stringValues = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-				if (stringStyle == "mix")
-				{
-					stringValues = stringValues + stringValues.ToLower();
-				}
-				else if (stringStyle == "lower")
-				{
-					stringValues = stringValues.ToLower();
-				}
+				var stringValues = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-				Random rnd = new Random();
-				return String.Join("", Enumerable.Range(0, stringLength).Select(n => stringValues[rnd.Next(stringValues.Length)]));
+			    if (stringStyle == "mix")
+			        stringValues = stringValues + stringValues.ToLower();
+			    else if (stringStyle == "lower")
+			    {
+			        stringValues = stringValues.ToLower();
+			    }
+
+				return string.Join("", Enumerable.Range(0, stringLength).Select(n => stringValues[Random.Next(stringValues.Length)]));
 			}
 
 			return DefaultValue;
@@ -204,167 +187,149 @@ namespace Celedon
 
 		public class ConditionalFormatter
 		{
-			private char Operator;
-			private ConditionalFormatter FalseCondition = null;
-			public string MatchValue { get; private set; }
-			public string TrueValue { get; private set; }
-			public string FalseValue { get; private set; }
+			private readonly char _operator;
+			private readonly ConditionalFormatter _falseCondition;
+
+			public string MatchValue { get; }
+			public string TrueValue { get; }
+			public string FalseValue { get; }
 
 			public ConditionalFormatter() : this("", "", "") { }
 			public ConditionalFormatter(string matchValue, string trueValue, string falseValue)
 			{
-				Operator = matchValue.StartsWith(">") || matchValue.StartsWith("<") ? matchValue[0] : '=';
+				_operator = matchValue.StartsWith(">") || matchValue.StartsWith("<") ? matchValue[0] : '=';
 				MatchValue = matchValue.TrimStart('>', '<');
 				TrueValue = trueValue;
 				FalseValue = falseValue;
 
-				if (falseValue.Contains('?'))  // if any nested conditions
-				{
-					string[] condition1 = falseValue.Split(new char[] { '?' }, 2);
-					string[] condition2 = condition1[1].Split(new char[] { '|' }, 2);
-					FalseCondition = new ConditionalFormatter(condition1[0], condition2[0], condition2[1]);
-				}
+			    if (!falseValue.Contains('?'))
+			    {
+			        return;
+			    }
+
+			    var condition1 = falseValue.Split(new [] { '?' }, 2);
+			    var condition2 = condition1[1].Split(new [] { '|' }, 2);
+			    _falseCondition = new ConditionalFormatter(condition1[0], condition2[0], condition2[1]);
 			}
 
+		    // ReSharper disable once MemberHidesStaticFromOuterClass
 			public static ConditionalFormatter Parse(string conditionalString)
 			{
-				string[] condition1 = conditionalString.Split(new char[] { '?' }, 2);
-				string[] condition2 = condition1[1].Split(new char[] { '|' }, 2);
+				var condition1 = conditionalString.Split(new [] { '?' }, 2);
+				var condition2 = condition1[1].Split(new [] { '|' }, 2);
 
 				return new ConditionalFormatter(condition1[0], condition2[0], condition2[1]);
 			}
 
-			public bool HasCondition
-			{
-				get { return !String.IsNullOrEmpty(MatchValue); }
-			}
+			public bool HasCondition => !string.IsNullOrEmpty(MatchValue);
 
-			public bool IsRecursive
-			{
-				get { return FalseCondition != null; }
-			}
+		    public bool IsRecursive => _falseCondition != null;
 
-			public string GetResult(string inputText)
+		    public string GetResult(string inputText)
 			{
-				if (!this.HasCondition)
+				if (!HasCondition)
 				{
 					return inputText;
 				}
 
-				if (this.IsRecursive)
+				if (IsRecursive)
 				{
-					return inputText == MatchValue ? TrueValue : FalseCondition.GetResult(inputText);
+					return inputText == MatchValue ? TrueValue : _falseCondition.GetResult(inputText);
 				}
-				else
-				{
-					return inputText == MatchValue ? TrueValue : FalseValue;
-				}
+
+			    return inputText == MatchValue ? TrueValue : FalseValue;
 			}
 
 			public string GetResult(Guid inputGuid)
 			{
-				if (!this.HasCondition)
+				if (!HasCondition)
 				{
 					return inputGuid.ToString();
 				}
 
-				if (this.IsRecursive)
+				if (IsRecursive)
 				{
-					return CompareGuid(inputGuid) ? TrueValue : FalseCondition.GetResult(inputGuid);
+					return CompareGuid(inputGuid) ? TrueValue : _falseCondition.GetResult(inputGuid);
 				}
-				else
-				{
-					return CompareGuid(inputGuid) ? TrueValue : FalseValue;
-				}
-			}
+
+			    return CompareGuid(inputGuid) ? TrueValue : FalseValue;
+            }
 
 			public string GetResult(int inputInt)
 			{
-				if (!this.HasCondition)
+				if (!HasCondition)
 				{
 					return inputInt.ToString();
 				}
 
-				if (this.IsRecursive)
+				if (IsRecursive)
 				{
-					return CompareNumeric(inputInt) ? TrueValue : FalseCondition.GetResult(inputInt);
+					return CompareNumeric(inputInt) ? TrueValue : _falseCondition.GetResult(inputInt);
 				}
-				else
-				{
-					return CompareNumeric(inputInt) ? TrueValue : FalseValue;
-				}
-			}
+
+			    return CompareNumeric(inputInt) ? TrueValue : FalseValue;
+            }
 
 			public string GetResult(double inputDouble)
 			{
-				if (!this.HasCondition)
+				if (!HasCondition)
 				{
-					return inputDouble.ToString();
+					return inputDouble.ToString(CultureInfo.InvariantCulture);
 				}
 
-				if (this.IsRecursive)
+				if (IsRecursive)
 				{
-					return CompareNumeric((decimal)inputDouble) ? TrueValue : FalseCondition.GetResult(inputDouble);
+					return CompareNumeric(inputDouble) ? TrueValue : _falseCondition.GetResult(inputDouble);
 				}
-				else
-				{
-					return CompareNumeric((decimal)inputDouble) ? TrueValue : FalseValue;
-				}
+
+			    return CompareNumeric(inputDouble) ? TrueValue : FalseValue;
 			}
 
 			public string GetResult(decimal inputDecimal)
 			{
-				if (!this.HasCondition)
+				if (!HasCondition)
 				{
-					return inputDecimal.ToString();
+					return inputDecimal.ToString(CultureInfo.InvariantCulture);
 				}
 
-				if (this.IsRecursive)
+				if (IsRecursive)
 				{
-					return CompareNumeric((decimal)inputDecimal) ? TrueValue : FalseCondition.GetResult(inputDecimal);
+					return CompareNumeric(inputDecimal) ? TrueValue : _falseCondition.GetResult(inputDecimal);
 				}
-				else
-				{
-					return CompareNumeric((decimal)inputDecimal) ? TrueValue : FalseValue;
-				}
+
+			    return CompareNumeric(inputDecimal) ? TrueValue : FalseValue;
 			}
 
 			public string GetResult(DateTime inputDate)
 			{
-				if (!this.HasCondition)
+				if (!HasCondition)
 				{
-					return inputDate.ToString();
+					return inputDate.ToString(CultureInfo.InvariantCulture);
 				}
 
-				if (this.IsRecursive)
+				if (IsRecursive)
 				{
-					return CompareDateTime(inputDate) ? TrueValue : FalseCondition.GetResult(inputDate);
+					return CompareDateTime(inputDate) ? TrueValue : _falseCondition.GetResult(inputDate);
 				}
-				else
-				{
-					return CompareDateTime(inputDate) ? TrueValue : FalseValue;
-				}
+
+			    return CompareDateTime(inputDate) ? TrueValue : FalseValue;
 			}
 
 			private bool CompareGuid(Guid id)
 			{
-				Guid matchGuid;
-				if (Guid.TryParse(MatchValue, out matchGuid))
+			    if (Guid.TryParse(MatchValue, out var matchGuid))
 				{
 					return id.Equals(matchGuid);
 				}
-				else
-				{
-					return id.ToString().Equals(MatchValue);
-				}
+
+			    return id.ToString().Equals(MatchValue);
 			}
 
 			private bool CompareDateTime(DateTime date)
 			{
-				DateTime matchDate;
-				if (DateTime.TryParse(MatchValue, out matchDate))
+			    if (DateTime.TryParse(MatchValue, out var matchDate))
 				{
-					switch (Operator)
+					switch (_operator)
 					{
 						case '>':
 							return date > matchDate;
@@ -380,25 +345,32 @@ namespace Celedon
 				}
 			}
 
-			private bool CompareNumeric(decimal number)
+		    private bool CompareNumeric(int number)
+		    {
+		        return CompareNumeric((decimal)number);
+		    }
+
+            private bool CompareNumeric(double number)
+		    {
+		        return CompareNumeric((decimal) number);
+		    }
+
+            private bool CompareNumeric(decimal number)
 			{
-				decimal matchNumber;
-				if (Decimal.TryParse(MatchValue, out matchNumber))
-				{
-					switch (Operator)
-					{
-						case '>':
-							return number > matchNumber;
-						case '<':
-							return number < matchNumber;
-						default:
-							return number == matchNumber;
-					}
-				}
-				else
-				{
-					return number.ToString() == MatchValue;
-				}
+			    if (!decimal.TryParse(MatchValue, out var matchNumber))
+			    {
+			        return number.ToString(CultureInfo.InvariantCulture) == MatchValue;
+			    }
+
+			    switch (_operator)
+			    {
+			        case '>':
+			            return number > matchNumber;
+			        case '<':
+			            return number < matchNumber;
+			        default:
+			            return number == matchNumber;
+			    }
 			}
 
 			public string GetResult(bool value)
@@ -407,9 +379,9 @@ namespace Celedon
 				return value ? TrueValue : FalseValue;
 			}
 
-			public override bool Equals(Object obj)
+			public override bool Equals(object obj)
 			{
-				return obj is ConditionalFormatter && this == (ConditionalFormatter)obj;
+				return obj is ConditionalFormatter formatter && this == formatter;
 			}
 			public override int GetHashCode()
 			{
@@ -417,15 +389,17 @@ namespace Celedon
 			}
 			public static bool operator ==(ConditionalFormatter x, ConditionalFormatter y)
 			{
-				if (Object.ReferenceEquals(null, x) && Object.ReferenceEquals(null, y))
+				if (ReferenceEquals(null, x) && ReferenceEquals(null, y))
 				{
 					return true;
 				}
-				else if (Object.ReferenceEquals(null, x) || Object.ReferenceEquals(null, y))
-				{
-					return false;
-				}
-				return x.MatchValue == y.MatchValue && x.TrueValue == y.TrueValue && x.FalseValue == y.FalseValue && x.FalseCondition == y.FalseCondition;
+
+			    if (ReferenceEquals(null, x) || ReferenceEquals(null, y))
+			    {
+			        return false;
+			    }
+
+			    return x.MatchValue == y.MatchValue && x.TrueValue == y.TrueValue && x.FalseValue == y.FalseValue && x._falseCondition == y._falseCondition;
 			}
 			public static bool operator !=(ConditionalFormatter x, ConditionalFormatter y)
 			{
