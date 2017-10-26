@@ -77,7 +77,7 @@ namespace Celedon
 
 			#region This loop populates the target record, and updates the autonumber record(s)
 
-		    if (!(context.PluginExecutionContext.InputParameters["target"] is Entity target))
+		    if (!(context.PluginExecutionContext.InputParameters["Target"] is Entity target))
 		    {
 		        return;
 		    }
