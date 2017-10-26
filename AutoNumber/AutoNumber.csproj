@@ -36,8 +36,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>
-    </AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>AutoNumberStrongKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Crm.Sdk.Proxy, Version=6.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -88,6 +87,7 @@
     <Compile Include="ValidateAutoNumber.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AutoNumberStrongKey.snk" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>

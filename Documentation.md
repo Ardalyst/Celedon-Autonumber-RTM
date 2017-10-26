@@ -1,4 +1,6 @@
 # Celedon Partners Dynamics CRM AutoNumber
+> Spec Status: *Current*<br />
+
 Provides auto-numbering to Dynamics CRM.
 
 ## Instructions for Runtime Parameters

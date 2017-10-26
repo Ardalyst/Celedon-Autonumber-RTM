@@ -5,19 +5,25 @@ Provides auto-numbering to Dynamics CRM.
 
 release:
 [![Build Status](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM.svg?branch=release)](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM/branches)
-master: 
+master:
 [![Build Status](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM.svg?branch=master)](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM/branches)
 dev: [![Build Status](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM.svg?branch=develop)](https://travis-ci.org/BESDev/Celedon-Autonumber-RTM/branches)
 
 ## How To Build
-You required the following to build AutoNumber:
+The following is required to build AutoNumber:
 
-* [Microsoft Visual Studio 2015](https://www.visualstudio.com/vs/older-downloads/)
+* [Microsoft Visual Studio 2015 or 2017](https://www.visualstudio.com/vs/older-downloads/)
 * [CRM Developer Toolkit - by Jason Lattimer](https://github.com/jlattimer/CRMDeveloperExtensions)
 
-The current version builds against the Dynamics CRM 2013 SDK
+The current version builds against the Dynamics CRM 2016 - v8.2.0.2 SDK
 
-## What it does right now, v1.1:
+## v1.2
+* Updated Code Formatting - *ReSharper* all the things!
+* Refactored code to be *Thread Safe*
+* Updated solution to v8.2
+* Updated SDK to v8.2.0.2
+
+## v1.1:
 * Supports custom prefix and suffix
 * Configurable number of digits
 * All parameters except the entityname and attributename can be modified at any time
