@@ -15,13 +15,16 @@ The following is required to build AutoNumber:
 * [Microsoft Visual Studio 2015 or 2017](https://www.visualstudio.com/vs/older-downloads/)
 * [CRM Developer Toolkit - by Jason Lattimer](https://github.com/jlattimer/CRMDeveloperExtensions)
 
-The current version builds against the Dynamics CRM 2016 - v8.2.0.2 SDK
+> The current version builds against the Dynamics CRM 2016 - v6.0 SDK and .Net 4.0. You can [look here](https://blogs.msdn.microsoft.com/crm/2017/02/01/dynamics-365-sdk-backwards-compatibility/) for more information on SDK compatibilities. Since this solution does not connect to CRM Via alternative methods we do not need to update the connectivity support that changed in the later versions of CRM-Online for OAuth support.
 
 ## v1.2
+> The plugin distributed with this version is *NOT* compatible with previous versions. You can import this Solution over the existing as an upgrade but you will need to convert the existing auto-number steps to the new plug-in in order to maintain support.
+
 * Updated Code Formatting - *ReSharper* all the things!
 * Refactored code to be *Thread Safe*
-* Updated solution to v8.2
-* Updated SDK to v8.2.0.2
+* Packaged Solution is exported for v8.0 (2016 RTM) - this means support for the v1.2 Solution is supported in 8.x + (Including 9.0) versions of CRM.
+* SDK Version is set to 6.0.0
+* Added back the test cases and converted to NUnit so that travis-ci can build
 
 ## v1.1:
 * Supports custom prefix and suffix
