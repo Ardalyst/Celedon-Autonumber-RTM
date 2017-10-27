@@ -1,13 +1,13 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Xrm.Sdk;
+using NUnit.Framework;
 
 namespace Celedon
 {
-	[TestClass]
+	[TestFixture]
 	public class AutoNumberUnitTest
 	{
-		[TestMethod]
+		[Test]
 		public void RuntimeParameterParseTest1()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{attributeName}");
@@ -22,7 +22,7 @@ namespace Celedon
 			Assert.AreEqual(rp.StringFormatter, String.Empty);
 		}
 
-		[TestMethod]
+		[Test]
 		public void RuntimeParameterParseTest2()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{parentLookup.parentAttribute}");
@@ -36,7 +36,8 @@ namespace Celedon
 			Assert.AreEqual(rp.DefaultValue, String.Empty);
 			Assert.AreEqual(rp.StringFormatter, String.Empty);
 		}
-		[TestMethod]
+
+		[Test]
 		public void RuntimeParameterParseTest3()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{attributeName|defaultValue}");
@@ -50,7 +51,8 @@ namespace Celedon
 			Assert.AreEqual(rp.ParentLookupName, String.Empty);
 			Assert.AreEqual(rp.StringFormatter, String.Empty);
 		}
-		[TestMethod]
+
+		[Test]
 		public void RuntimeParameterParseTest4()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{attributeName:formatString}");
@@ -64,7 +66,8 @@ namespace Celedon
 			Assert.AreEqual(rp.DefaultValue, String.Empty);
 			Assert.AreEqual(rp.ParentLookupName, String.Empty);
 		}
-		[TestMethod]
+
+		[Test]
 		public void RuntimeParameterParseTest5()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{attributeName:matchValue?trueValue|falseValue}");
@@ -82,7 +85,8 @@ namespace Celedon
 			Assert.AreEqual(rp.Conditional.GetResult("matchValue"), "trueValue");
 			Assert.AreEqual(rp.Conditional.GetResult("other"), "falseValue");
 		}
-		[TestMethod]
+
+		[Test]
 		public void RuntimeParameterParseTest6()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{attributeName:match1?result1|match2?result2|match3?result3|elseResult}");
@@ -101,7 +105,8 @@ namespace Celedon
 			Assert.AreEqual(rp.Conditional.GetResult("match3"), "result3");
 			Assert.AreEqual(rp.Conditional.GetResult("other"), "elseResult");
 		}
-		[TestMethod]
+
+		[Test]
 		public void RuntimeParameterParseTest7()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{attributeName:formatString:matchValue?trueValue|falseValue}");
@@ -119,7 +124,8 @@ namespace Celedon
 			Assert.AreEqual(rp.Conditional.GetResult("other"), "falseValue");
 
 		}
-		[TestMethod]
+
+		[Test]
 		public void RuntimeParameterParseTest8()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{parentLookup.parentAttribute:formatString:matchValue?trueValue|falseValue}");
@@ -136,7 +142,8 @@ namespace Celedon
 			Assert.AreEqual(rp.Conditional.GetResult("matchValue"), "trueValue");
 			Assert.AreEqual(rp.Conditional.GetResult("other"), "falseValue");
 		}
-		[TestMethod]
+
+		[Test]
 		public void RuntimeParameterParseTest9()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{attributeName|defaultValue:formatString:matchValue?trueValue|falseValue}");
@@ -153,7 +160,8 @@ namespace Celedon
 			Assert.AreEqual(rp.Conditional.GetResult("matchValue"), "trueValue");
 			Assert.AreEqual(rp.Conditional.GetResult("other"), "falseValue");
 		}
-		[TestMethod]
+
+		[Test]
 		public void RuntimeParameterParseTest10()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{attributeName:>100?trueValue|falseValue}");
@@ -170,7 +178,8 @@ namespace Celedon
 			Assert.AreEqual(rp.Conditional.GetResult(101), "trueValue");
 			Assert.AreEqual(rp.Conditional.GetResult(99), "falseValue");
 		}
-		[TestMethod]
+
+		[Test]
 		public void RuntimeParameterParseTest11()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{attributeName:<2015-1-1?trueValue|falseValue}");
@@ -187,7 +196,8 @@ namespace Celedon
 			Assert.AreEqual(rp.Conditional.GetResult(new DateTime(2014,1,1)), "trueValue");
 			Assert.AreEqual(rp.Conditional.GetResult(new DateTime(2016,1,1)), "falseValue");
 		}
-		[TestMethod]
+
+		[Test]
 		public void RuntimeParameterParseTest12()
 		{
 			RuntimeParameter rp = RuntimeParameter.Parse("{attributeName:yyyy:2015?trueValue|falseValue}");
@@ -199,7 +209,7 @@ namespace Celedon
 			// Stuff that should not be populated
 			Assert.AreEqual(rp.DefaultValue, String.Empty);
 			Assert.AreEqual(rp.ParentLookupName, String.Empty);
-			
+
 			// Conditional test cases
 			Entity test = new Entity();
 			test["attributeName"] = new DateTime(2015,1,1);

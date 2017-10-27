@@ -1,7 +1,6 @@
-﻿// Author: Matt Barnes (matt.barnes@celedonpartners.com)
-/*The MIT License (MIT)
+﻿/*The MIT License (MIT)
 
-Copyright (c) 2015 Celedon Partners 
+Copyright (c) 2017 Celedon Partners 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +25,6 @@ SOFTWARE.
 
 using System;
 using System.Linq;
-using System.Collections.Generic;
-
 using Microsoft.Xrm.Sdk;
 
 namespace Celedon
@@ -40,7 +37,7 @@ namespace Celedon
 		// Registration details:
 		// Message: Delete
 		// Primary Entity: cel_autonumber
-		// User Context: SYSTEM
+		// User context: SYSTEM
 		// Event Pipeline: Post
 		// Mode: Async
 		// Config: none
@@ -52,16 +49,16 @@ namespace Celedon
 		//
 		public DeleteAutoNumber()
 		{
-			//this.RegisteredEvents.Add(new Tuple<int,string,string,Action<LocalPluginContext>>(POSTOPERATION, DELETEMESSAGE, "entityname", new Action<LocalPluginContext>(Execute)));
-			RegisterEvent(POSTOPERATION, DELETEMESSAGE, "cel_autonumber", Execute);
+			//this.RegisteredEvents.Add(new Tuple<int,string,string,Action<LocalPluginContext>>(PostOperation, DELETEMESSAGE, "entityname", new Action<LocalPluginContext>(Execute)));
+			RegisterEvent(Constants.PipelineStage.PreOperation, Constants.PipelineMessage.Delete, "cel_autonumber", Execute);
 		}
 
-		protected void Execute(LocalPluginContext Context)
+		protected void Execute(LocalPluginContext context)
 		{
-			int triggerEvent = Context.PreImage.Contains("cel_triggerevent") && Context.PreImage.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1 ? 1 : 0;
+			var triggerEvent = context.PreImage.Contains("cel_triggerevent") && context.PreImage.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1 ? 1 : 0;
 
-			var remainingAutoNumberList = Context.OrganizationDataContext.CreateQuery("cel_autonumber")
-																		 .Where(s => s.GetAttributeValue<string>("cel_entityname").Equals(Context.PreImage.GetAttributeValue<string>("cel_entityname")))
+			var remainingAutoNumberList = context.OrganizationDataContext.CreateQuery("cel_autonumber")
+																		 .Where(s => s.GetAttributeValue<string>("cel_entityname").Equals(context.PreImage.GetAttributeValue<string>("cel_entityname")))
 																		 .Select(s => new { Id = s.GetAttributeValue<Guid>("cel_autonumberid"), TriggerEvent = s.Contains("cel_triggerevent") ? s.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value : 0  })
 																		 .ToList();
 
@@ -71,13 +68,14 @@ namespace Celedon
 			}
 
 			// Find and remove the registerd plugin
-			string pluginName = String.Format(CreateAutoNumber.PLUGIN_NAME, Context.PreImage.GetAttributeValue<string>("cel_entityname"));
-			if (Context.PreImage.Contains("cel_triggerevent") && Context.PreImage.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1)
+			var pluginName = string.Format(CreateAutoNumber.PluginName, context.PreImage.GetAttributeValue<string>("cel_entityname"));
+
+			if (context.PreImage.Contains("cel_triggerevent") && context.PreImage.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1)
 			{
 				pluginName += " Update";
 			}
 
-			var pluginStepList = Context.OrganizationDataContext.CreateQuery("sdkmessageprocessingstep")
+			var pluginStepList = context.OrganizationDataContext.CreateQuery("sdkmessageprocessingstep")
 																.Where(s => s.GetAttributeValue<string>("name").Equals(pluginName))
 																.Select(s => s.GetAttributeValue<Guid>("sdkmessageprocessingstepid"))
 																.ToList();
@@ -88,7 +86,7 @@ namespace Celedon
 			}
 			
 			// Delete plugin step
-			Context.OrganizationService.Delete("sdkmessageprocessingstep", pluginStepList.First());
+			context.OrganizationService.Delete("sdkmessageprocessingstep", pluginStepList.First());
 		}
 	}
 }

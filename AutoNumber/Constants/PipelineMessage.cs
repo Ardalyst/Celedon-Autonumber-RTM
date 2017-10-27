@@ -1,6 +1,6 @@
 ﻿/*The MIT License (MIT)
 
-Copyright (c) 2015 Celedon Partners 
+Copyright (c) 2017 Celedon Partners 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,17 +21,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System.Runtime.Serialization;
-
-namespace Celedon
+namespace Celedon.Constants
 {
-	[DataContract]
-	public class AutoNumberPluginConfig
-	{
-		[DataMember]
-		public string EntityName;
-
-		[DataMember]
-		public string EventName;
-	}
+    public static class PipelineMessage
+    {
+        public const string Create = "Create";
+        public const string Retrieve = "Retrieve";
+        public const string Update = "Update";
+        public const string Delete = "Delete";
+        public const string RetrieveMultiple = "RetrieveMultiple";
+        public const string Associate = "Associate";
+        public const string Disassociate = "Disassociate";
+        public const string SetState = "SetState";
+    }
 }

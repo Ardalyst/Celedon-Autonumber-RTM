@@ -1,6 +1,6 @@
 ﻿/*The MIT License (MIT)
 
-Copyright (c) 2015 Celedon Partners 
+Copyright (c) 2017 Celedon Partners 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,17 +21,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using System.Runtime.Serialization;
-
-namespace Celedon
+namespace Celedon.Constants
 {
-	[DataContract]
-	public class AutoNumberPluginConfig
-	{
-		[DataMember]
-		public string EntityName;
-
-		[DataMember]
-		public string EventName;
-	}
+    public static class PipelineStage
+    {
+        public const int PreValidation = 10;
+        public const int PreOperation = 20;
+        public const int PostOperation = 40;
+    }
 }

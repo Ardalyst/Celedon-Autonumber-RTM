@@ -1,20 +1,18 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("AutoNumber")]
+[assembly: AssemblyTitle("AutoNumber.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Celedon Partners")]
-[assembly: AssemblyProduct("AutoNumber")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("AutoNumber.Tests")]
 [assembly: AssemblyCopyright("Copyright © Celedon Partners 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: CLSCompliant(true)]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
@@ -22,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("4dc971d5-7361-46ff-9df8-f6571ce6fc4c")]
+[assembly: Guid("ce5c64cf-6dcb-4fad-9158-2eeeb1f0c6fe")]
 
 // Version information for an assembly consists of the following four values:
 //
