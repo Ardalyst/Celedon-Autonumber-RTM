@@ -112,7 +112,28 @@ namespace Celedon
 			};
 
 		    context.Trace("Create new plugin step");
-			context.OrganizationService.Create(newPluginStep);
+		    var sdkmessageprocessingstepid = context.OrganizationService.Create(newPluginStep);
+
+            // only add the image if the type is update, on create a value cannot be overridden
+		    if (target.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == 1)
+		    {
+		        context.Trace("Build new plugin step image");
+		        var newPluginStepImage = new Entity("sdkmessageprocessingstepimage")
+		        {
+		            Attributes = new AttributeCollection()
+		            {
+		                {"sdkmessageprocessingstepid", sdkmessageprocessingstepid.ToEntityReference("sdkmessageprocessingstep")},
+		                {"imagetype", 0.ToOptionSetValue()}, // PreImage
+		                {"messagepropertyname", "Target"},
+		                {"name", "Image"}, 
+		                {"entityalias", "Image"}, 
+		                {"attributes", target.GetAttributeValue<string>("cel_attributename")}, //Only incluce the one attribute we really need. 
+		            }
+		        };
+
+		        context.Trace("Create new plugin step image");
+		        context.OrganizationService.Create(newPluginStepImage);
+		    }
 		}
 	}
 }

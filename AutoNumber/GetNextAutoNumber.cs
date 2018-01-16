@@ -107,9 +107,10 @@ namespace Celedon
 					continue;  // Continue, if this is a conditional optionset
 				}
 
-                if (target.Contains(targetAttribute) && !string.IsNullOrWhiteSpace(target.GetAttributeValue<string>(targetAttribute)))
-				{
-					continue;  // Continue, so we don't overwrite an existing value
+                if (context.PreImage.Contains(targetAttribute) && !string.IsNullOrWhiteSpace(context.PreImage.GetAttributeValue<string>(targetAttribute)))
+                {
+                    context.TracingService.Trace("Target attribute '{0}' is already populated. Continue, so we don't overwrite an existing value.", targetAttribute);
+                    continue;  // Continue, so we don't overwrite an existing value
 				}
 				#endregion
 
