@@ -84,9 +84,20 @@ namespace Celedon
 			{
 				return;  
 			}
-			
-			// Delete plugin step
-			context.OrganizationService.Delete("sdkmessageprocessingstep", pluginStepList.First());
+
+            // Delete all images
+		    var images = context.OrganizationDataContext.CreateQuery("sdkmessageprocessingstepimage")
+		        .Where(s => s.GetAttributeValue<Guid>("sdkmessageprocessingstepid").Equals(pluginStepList.First()))
+		        .Select(s => s.GetAttributeValue<Guid>("sdkmessageprocessingstepimageid"))
+		        .ToList();
+
+		    foreach (var image in images)
+		    {
+		        context.OrganizationService.Delete("sdkmessageprocessingstepimage", image);
+            }
+
+            // Delete plugin step
+            context.OrganizationService.Delete("sdkmessageprocessingstep", pluginStepList.First());
 		}
 	}
 }
