@@ -112,30 +112,45 @@ namespace Celedon
                     context.TracingService.Trace("Target attribute '{0}' is already populated. Continue, so we don't overwrite an existing value.", targetAttribute);
                     continue;  // Continue, so we don't overwrite an existing value
 				}
-				#endregion
+                #endregion
 
-				#region Create the AutoNumber
-				var numDigits = autoNumber.GetAttributeValue<int>("cel_digits");
+                #region Create the AutoNumber
+                var preGenerated = autoNumber.GetAttributeValue<bool>("cel_ispregenerated");
 
-			    var prefix = context.OrganizationService.ReplaceParameters(target, autoNumber.GetAttributeValue<string>("cel_prefix"));
+                if (preGenerated)  // Pull number from a pre-generated list
+                {
+                    var preGenNumber = context.OrganizationDataContext.CreateQuery("cel_generatednumber").Where(n => n.GetAttributeValue<EntityReference>("cel_parentautonumberid").Id == autoNumberId && n.GetAttributeValue<OptionSetValue>("statecode").Value == 0).OrderBy(n => n.GetAttributeValue<int>("cel_ordinal")).Take(1).ToList().FirstOrDefault();
+                    target[targetAttribute] = preGenNumber["cel_number"] ?? throw new InvalidPluginExecutionException("No available numbers for this record.  Please contact your System Administrator.");
 
-			    var number = numDigits == 0 ? "" : autoNumber.GetAttributeValue<int>("cel_nextnumber").ToString("D" + numDigits);
+                    var deactivatedNumber = new Entity("cel_generatednumber");
+                    deactivatedNumber["statecode"] = new OptionSetValue(1);
 
-                var postfix = context.OrganizationService.ReplaceParameters(target, autoNumber.GetAttributeValue<string>("cel_suffix"));
-                // Generate number and insert into target Record
-			    target[targetAttribute] = $"{prefix}{number}{postfix}";
+                    context.OrganizationService.Update(deactivatedNumber);
+                }
+                else  // Do a normal number generation
+                {
+                    var numDigits = autoNumber.GetAttributeValue<int>("cel_digits");
 
-				// Increment next number in db
-			    var updatedAutoNumber = new Entity("cel_autonumber")
-			    {
-			        Id = autoNumber.Id,
-			        ["cel_nextnumber"] = autoNumber.GetAttributeValue<int>("cel_nextnumber") + 1,
-			        ["cel_preview"] = target[targetAttribute]
-			    };
+                    var prefix = context.OrganizationService.ReplaceParameters(target, autoNumber.GetAttributeValue<string>("cel_prefix"));
 
-			    context.OrganizationService.Update(updatedAutoNumber);
-				#endregion
-			}
+                    var number = numDigits == 0 ? "" : autoNumber.GetAttributeValue<int>("cel_nextnumber").ToString("D" + numDigits);
+
+                    var postfix = context.OrganizationService.ReplaceParameters(target, autoNumber.GetAttributeValue<string>("cel_suffix"));
+                    // Generate number and insert into target Record
+                    target[targetAttribute] = $"{prefix}{number}{postfix}";
+                }
+
+                // Increment next number in db
+                var updatedAutoNumber = new Entity("cel_autonumber")
+                {
+                    Id = autoNumber.Id,
+                    ["cel_nextnumber"] = autoNumber.GetAttributeValue<int>("cel_nextnumber") + 1,
+                    ["cel_preview"] = target[targetAttribute]
+                };
+
+                context.OrganizationService.Update(updatedAutoNumber);
+                #endregion
+            }
 			#endregion
 		}
 	}
