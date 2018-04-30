@@ -76,11 +76,11 @@ In this example, if the attribute value equals "match1", then the number will us
 
 ## FAQ
 
-**Q**: Does the current version work with Lookups?  ***A: No. This has been logged as a future enhancement**
+**Q**: Does the current version work with Lookups?  **A: No. This has been logged as a future enhancement**
 
-**Q**: Are auto numbering on integer fields supported? ***A: Not in this release**
+**Q**: Are auto numbering on integer fields supported? **A: Not in this release**
 
-**Q**: Are values from grandparent or child entities supported? ***A: No, not part of this release. A workaround for the current version: Add a calculated or auto number field on Opportunity that gets the value from the grandparent.**
+**Q**: Are values from grandparent or child entities supported? **A: No, not part of this release. A workaround for the current version: Add a calculated or auto number field on Opportunity that gets the value from the grandparent.**
 
 **Considerations:**
 * Once you get to grandparent, it could introduce performance issues, because multiple retrieve calls will be needed to get the final value
