@@ -74,15 +74,15 @@ In this example, if the attribute value equals "match1", then the number will us
 * attribute with default and condition: **{attributeName|defaultValue:matchValue?trueValue|falseValue}**
 * attribute with default, format and condition: **{attributeName|defaultValue:formatString:matchValue?trueValue|falseValue}**
 
-#### FAQ
+## FAQ
 
-**Q**: Does the current version work with Lookups?  ***A: No. This has been logged as a future enhancement
+**Q**: Does the current version work with Lookups?  ***A: No. This has been logged as a future enhancement**
 
-**Q**: Are auto numbering on integer fields supported? ***A: Not in this release
+**Q**: Are auto numbering on integer fields supported? ***A: Not in this release**
 
-**Q**: Are values from grandparent or child entities supported? ***A: No, not part of this release. A workaround for the current version: Add a calculated or auto number field on Opportunity that gets the value from the grandparent.
+**Q**: Are values from grandparent or child entities supported? ***A: No, not part of this release. A workaround for the current version: Add a calculated or auto number field on Opportunity that gets the value from the grandparent.**
 
-**Considerations:
+**Considerations:**
 * Once you get to grandparent, it could introduce performance issues, because multiple retrieve calls will be needed to get the final value
 
 * There is a possibility of a circular reference. For example Account/Contact: You can have Parent Account on Contact, and you can have Primary Contact on Account, and in some instances that would be an infinite loop.
