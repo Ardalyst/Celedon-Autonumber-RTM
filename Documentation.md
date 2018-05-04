@@ -80,6 +80,8 @@ In this example, if the attribute value equals "match1", then the number will us
 
 **Q**: Are auto numbering on integer fields supported? **A: Not in this release**
 
+**Q**: Is this solution FIPS compliant/compatible? **A: No. The code has not been through the review process for FIPS compliance**
+
 **Q**: Are values from grandparent or child entities supported? **A: No, not part of this release. A workaround for the current version: Add a calculated or auto number field on Opportunity that gets the value from the grandparent.**
 
 **Considerations:**
