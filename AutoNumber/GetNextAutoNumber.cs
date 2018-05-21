@@ -31,90 +31,97 @@ using Microsoft.Xrm.Sdk.Query;
 
 namespace Celedon
 {
-	public class GetNextAutoNumber : CeledonPlugin
-	{
-		//
-		// This is the main plugin that creates the numbers and adds them to new records
-		// This plugin is not registered by default.  It is registered and unregistered dynamically by the CreateAutoNumber and DeleteAutoNumber plugins respectively
-		//
-
-		public GetNextAutoNumber(string pluginConfig)
-		{
-		    // Need to support older version
+    public class GetNextAutoNumber : CeledonPlugin
+    {
+        //
+        // This is the main plugin that creates the numbers and adds them to new records
+        // This plugin is not registered by default.  It is registered and unregistered dynamically by the CreateAutoNumber and DeleteAutoNumber plugins respectively
+        //
+        public GetNextAutoNumber(string pluginConfig)
+        {
+            // Need to support older version
             if (pluginConfig.TryParseJson(out AutoNumberPluginConfig config))
-			{
-					RegisterEvent(PipelineStage.PreOperation, config.EventName, config.EntityName, Execute);
-			}
-			else
-			{
-				RegisterEvent(PipelineStage.PreOperation, PipelineMessage.Create, pluginConfig, Execute);
-			}
-		}
+            {
+                RegisterEvent(PipelineStage.PreOperation, config.EventName, config.EntityName, Execute);
+            }
+            else
+            {
+                RegisterEvent(PipelineStage.PreOperation, PipelineMessage.Create, pluginConfig, Execute);
+            }
+        }
 
-		protected void Execute(LocalPluginContext context)
-		{
-			#region Get the list of autonumber records applicable to the target entity type
-			int triggerEvent = context.PluginExecutionContext.MessageName == "Update" ? 1 : 0;
-			var autoNumberIdList = context.OrganizationDataContext.CreateQuery("cel_autonumber")
-																  .Where(a => a.GetAttributeValue<string>("cel_entityname").Equals(context.PluginExecutionContext.PrimaryEntityName) && a.GetAttributeValue<OptionSetValue>("statecode").Value == 0 && a.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == triggerEvent)
-																  .OrderBy(a => a.GetAttributeValue<Guid>("cel_autonumberid"))  // Insure they are ordered, to prevent deadlocks
-																  .Select(a => a.GetAttributeValue<Guid>("cel_autonumberid"));
-			#endregion
+        protected void Execute(LocalPluginContext context)
+        {
+            #region Get the list of autonumber records applicable to the target entity type
 
-			#region This loop locks the autonumber record(s) so only THIS transaction can read/write it
-			foreach (var autoNumberId in autoNumberIdList)
-			{
-			    var lockingUpdate = new Entity("cel_autonumber")
-			    {
-			        Id = autoNumberId,
-			        ["cel_preview"] = "555"
-			    };
-			    // Use the preview field as our "dummy" field - so we don't need a dedicated "dummy"
+            var triggerEvent = context.PluginExecutionContext.MessageName;
+            var autoNumberIdList = context.OrganizationDataContext.CreateQuery("cel_autonumber")
+                                                                  .Where(a => a.GetAttributeValue<string>("cel_entityname").Equals(context.PluginExecutionContext.PrimaryEntityName) && a.GetAttributeValue<OptionSetValue>("statecode").Value == 0 && a.GetAttributeValue<OptionSetValue>("cel_triggerevent").Value == (triggerEvent == "Update" ? 1 : 0))
+                                                                  .OrderBy(a => a.GetAttributeValue<Guid>("cel_autonumberid"))  // Insure they are ordered, to prevent deadlocks
+                                                                  .Select(a => a.GetAttributeValue<Guid>("cel_autonumberid"));
+            #endregion
 
-			    context.OrganizationService.Update(lockingUpdate);
-			}
-			#endregion
+            #region This loop locks the autonumber record(s) so only THIS transaction can read/write it
 
-			#region This loop populates the target record, and updates the autonumber record(s)
+            foreach (var autoNumberId in autoNumberIdList)
+            {
+                var lockingUpdate = new Entity("cel_autonumber")
+                {
+                    Id = autoNumberId,
+                    ["cel_preview"] = "555"
+                };
+                // Use the preview field as our "dummy" field - so we don't need a dedicated "dummy"
 
-		    if (!(context.PluginExecutionContext.InputParameters["Target"] is Entity target))
-		    {
-		        return;
-		    }
+                context.OrganizationService.Update(lockingUpdate);
+            }
 
-			foreach (var autoNumberId in autoNumberIdList)
-			{
-				var autoNumber = context.OrganizationService.Retrieve("cel_autonumber", autoNumberId, new ColumnSet(
-                    "cel_attributename", 
-                    "cel_triggerattribute", 
-                    "cel_conditionaloptionset", 
+            #endregion
+
+            #region This loop populates the target record, and updates the autonumber record(s)
+
+            if (!(context.PluginExecutionContext.InputParameters["Target"] is Entity target))
+            {
+                return;
+            }
+
+            foreach (var autoNumberId in autoNumberIdList)
+            {
+                var autoNumber = context.OrganizationService.Retrieve("cel_autonumber", autoNumberId, new ColumnSet(
+                    "cel_attributename",
+                    "cel_triggerattribute",
+                    "cel_conditionaloptionset",
                     "cel_conditionalvalue",
                     "cel_digits",
                     "cel_prefix",
                     "cel_nextnumber",
                     "cel_suffix"));
 
-				var targetAttribute = autoNumber.GetAttributeValue<string>("cel_attributename");
+                var targetAttribute = autoNumber.GetAttributeValue<string>("cel_attributename");
 
-				#region Check conditions that prevent creating an autonumber
-				if (context.PluginExecutionContext.MessageName == "Update" && !target.Contains(autoNumber.GetAttributeValue<string>("cel_triggerattribute")))
-				{
-					continue;  // Continue, if this is an Update event and the target does not contain the trigger value
-				}
+                #region Check conditions that prevent creating an autonumber
 
-                if ((autoNumber.Contains("cel_conditionaloptionset") && (!target.Contains(autoNumber.GetAttributeValue<string>("cel_conditionaloptionset")) || target.GetAttributeValue<OptionSetValue>(autoNumber.GetAttributeValue<string>("cel_conditionaloptionset")).Value != autoNumber.GetAttributeValue<int>("cel_conditionalvalue"))))
-				{
-					continue;  // Continue, if this is a conditional optionset
-				}
-
-                if (triggerEvent == 1 && context.PreImage.Contains(targetAttribute) && !string.IsNullOrWhiteSpace(context.PreImage.GetAttributeValue<string>(targetAttribute)))
+                if (context.PluginExecutionContext.MessageName == "Update" && !target.Contains(autoNumber.GetAttributeValue<string>("cel_triggerattribute")))
+                {
+                    continue;  // Continue, if this is an Update event and the target does not contain the trigger value
+                }
+                else if ((autoNumber.Contains("cel_conditionaloptionset") && (!target.Contains(autoNumber.GetAttributeValue<string>("cel_conditionaloptionset")) || target.GetAttributeValue<OptionSetValue>(autoNumber.GetAttributeValue<string>("cel_conditionaloptionset")).Value != autoNumber.GetAttributeValue<int>("cel_conditionalvalue"))))
+                {
+                    continue;  // Continue, if this is a conditional optionset
+                }
+                else if (target.Contains(targetAttribute) && !string.IsNullOrWhiteSpace(target.GetAttributeValue<string>(targetAttribute)))
+                {
+                    continue;  // Continue so we don't overwrite a manual value
+                }
+                else if (triggerEvent == "Update" && context.PreImage.Contains(targetAttribute) && !string.IsNullOrWhiteSpace(context.PreImage.GetAttributeValue<string>(targetAttribute)))
                 {
                     context.TracingService.Trace("Target attribute '{0}' is already populated. Continue, so we don't overwrite an existing value.", targetAttribute);
                     continue;  // Continue, so we don't overwrite an existing value
-				}
+                }
+
                 #endregion
 
                 #region Create the AutoNumber
+
                 var preGenerated = autoNumber.GetAttributeValue<bool>("cel_ispregenerated");
 
                 if (preGenerated)  // Pull number from a pre-generated list
@@ -149,9 +156,11 @@ namespace Celedon
                 };
 
                 context.OrganizationService.Update(updatedAutoNumber);
+
                 #endregion
             }
-			#endregion
-		}
-	}
+
+            #endregion
+        }
+    }
 }
