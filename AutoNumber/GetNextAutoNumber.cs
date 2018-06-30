@@ -93,6 +93,7 @@ namespace Celedon
                     "cel_conditionalvalue",
                     "cel_digits",
                     "cel_prefix",
+                    "cel_ispregenerated",
                     "cel_nextnumber",
                     "cel_suffix"));
 
@@ -131,6 +132,7 @@ namespace Celedon
 
                     var deactivatedNumber = new Entity("cel_generatednumber");
                     deactivatedNumber["statecode"] = new OptionSetValue(1);
+                    deactivatedNumber.Id = preGenNumber.Id;
 
                     context.OrganizationService.Update(deactivatedNumber);
                 }
